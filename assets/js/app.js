@@ -10,13 +10,51 @@ const CHECK = "fa-check-circle";
 const UNCHECK = "fa-circle-thin";
 const LINE_THROUGH = "lineThrough";
 
+// console.log(axios);
+
+const http = axios.create({
+  baseURL: BASE_URL,
+});
+// addTodo(item.name, item.id, item.done, item.trash);
+
+/*function fetchTodos(){
+  return http.get("/todo/all").then((response) =>{
+    return  response.data.map(todo=>{
+      return {
+        id: todo._id,
+        name: todo.name,
+        done:false,
+        trash: false
+      }
+    })
+  }).catch(error =>{
+    console.log(error)
+  })*/
+
+async function fetchTodos() {
+  try {
+    const response = await http.get("/todo/all");
+    return response.data.map((todo, index) => {
+      return {
+        id: index,
+        docId: todo._id,
+        name: todo.name,
+        done: false,
+        trash: false,
+      };
+    });
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 //Varables
 let LIST, id;
 
 //get items from local storage
 let data = localStorage.getItem("TODO");
 
-//check if data is not empty
+/*//check if data is not empty
 if (data) {
   LIST = JSON.parse(data);
   id = LIST.length; //set the id to the last item in the list
@@ -25,17 +63,25 @@ if (data) {
   //if data is empty
   LIST = [];
   id = 0;
-}
+}*/
+
+//load server list
+fetchTodos().then((items) => {
+  if (items.length) {
+    loadList(items);
+  }
+  LIST = items;
+});
 
 //load items to the user's interface
 function loadList(array) {
-  array.forEach(item => {
+  array.forEach((item) => {
     addTodo(item.name, item.id, item.done, item.trash);
   });
 }
 
 //clear the local storage
-clear.addEventListener("click", function() {
+clear.addEventListener("click", function () {
   localStorage.clear();
   location.reload();
 });
@@ -44,7 +90,7 @@ clear.addEventListener("click", function() {
 const options = {
   weekday: "long",
   month: "short",
-  day: "numeric"
+  day: "numeric",
 };
 const today = new Date();
 dateElement.innerHTML = today.toLocaleDateString("en-US", options);
@@ -67,21 +113,43 @@ function addTodo(toDo, id, done, trash) {
 }
 
 //add items to the list when user clicks enter key
-document.addEventListener("keyup", function(event) {
+document.addEventListener("keyup", function (event) {
   if (event.keyCode == 13) {
     const toDo = input.value;
     //if input is not empty
+
     if (toDo) {
-      addTodo(toDo, id, false, false);
+      //create todo and store on database
+      http
+        .post("/todo/create", {
+          name: toDo,
+        })
+        .then((response) => {
+          if (response.status === 200) {
+            addTodo(toDo, id, false, false);
+            LIST.push({
+              name: toDo,
+              id: id,
+              done: false,
+              trash: false,
+            });
+            id++;
+          }
+          //else handle errors here
+        })
+        .catch((error) => {
+          //handle request sending errors here
+        });
+      /*addTodo(toDo, id, false, false);
       LIST.push({
         name: toDo,
         id: id,
         done: false,
-        trash: false
+        trash: false,
       });
       //add items to local storage(this code must be added everywhere the LIST array is updated)
       localStorage.setItem("TODO", JSON.stringify(LIST));
-      id++;
+      id++;*/
     }
     input.value = "";
   }
@@ -96,14 +164,27 @@ function completeTodo(element) {
   LIST[element.id].done = LIST[element.id].done ? false : true;
 }
 
-//remove to do items
+/*//remove to do items from local storage
 function removeTodo(element) {
   element.parentNode.parentNode.removeChild(element.parentNode);
   LIST[element.id].trash = true;
+}*/
+
+//remove to do items from server
+function removeTodo(element) {
+  //display to the user to notify on ongoing background operation
+  // console.log(LIST), element.id;
+  const todo = LIST[element.id];
+  todo.trash = true;
+  http.delete(`/todo/delete/${todo.docId}`).then((response) => {
+    element.parentNode.parentNode.removeChild(element.parentNode);
+    //show a notification that todo has been deleted
+    console.log(response);
+  });
 }
 
 //target the items created dynamically
-list.addEventListener("click", function(event) {
+list.addEventListener("click", function (event) {
   const element = event.target; //returns the clicked element in the list items
   const elementJob = element.attributes.job.value; //returns complete or delete
   console.log(event.target);
