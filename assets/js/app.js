@@ -39,8 +39,8 @@ async function fetchTodos() {
         id: index,
         docId: todo._id,
         name: todo.name,
-        done: false,
-        trash: false,
+        done: todo.done,
+        trash: todo.trash,
       };
     });
   } catch (error) {
@@ -80,10 +80,31 @@ function loadList(array) {
   });
 }
 
-//clear the local storage
+/*//clear the local storage
 clear.addEventListener("click", function () {
   localStorage.clear();
   location.reload();
+});*/
+
+clear.addEventListener("click", () => {
+  Swal.fire({
+    title: "Are you sure you want to delete all todos?",
+    text: "You won't be able to revert this!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "Yes, delete it!",
+  }).then(async (result) => {
+    if (result.value) {
+      // this is to clear all inputted and save data already existent in data storage
+      await http.delete("/todo/delete");
+      // this helps to refresh/reload the page when the refresh or clear icon is clicked on
+      location.reload();
+      // show a notification
+      Swal.fire("Deleted!", "Your all todo has been deleted.", "success");
+    }
+  });
 });
 
 //Show Today's date
@@ -102,10 +123,11 @@ function addTodo(toDo, id, done, trash) {
   }
   const DONE = done ? CHECK : UNCHECK;
   const LINE = done ? LINE_THROUGH : "";
-  const item = `<li class="item">
+  const item = `<li class="item" id="${id}">
                         <i class="fa ${DONE} co" job="complete" id="${id}"></i>
-                        <p class="text ${LINE}">${toDo}</p>
+                        <p class="text ${LINE}" id="todo${id}">${toDo}</p>
                         <i class="fa fa-trash-o de" job="delete" id="${id}"></i>
+                        <i class="fa fa-edit ed" job ="edit" id="todo${id}"></i>
                     </li>
                 `;
   const position = "beforeend";
@@ -134,6 +156,13 @@ document.addEventListener("keyup", function (event) {
               trash: false,
             });
             id++;
+            Swal.fire({
+              position: "top-end",
+              icon: "success",
+              title: "Your TODO has been saved",
+              showConfirmButton: true,
+              timer: 10000,
+            });
           }
           //else handle errors here
         })
@@ -161,7 +190,18 @@ function completeTodo(element) {
   element.classList.toggle(UNCHECK);
   element.parentNode.querySelector(".text").classList.toggle(LINE_THROUGH);
 
-  LIST[element.id].done = LIST[element.id].done ? false : true;
+  // LIST[element.id].done = LIST[element.id].done ? false : true;
+
+  const name = element.parentNode.querySelector(".text").innerText;
+  const id = element.attributes.id.value;
+
+  const done =
+    element.classList.value == "fa co fa-check-circle" ? true : false;
+
+  http.patch(`/todo/update/${id}`, {
+    name,
+    done,
+  });
 }
 
 /*//remove to do items from local storage
@@ -172,14 +212,69 @@ function removeTodo(element) {
 
 //remove to do items from server
 function removeTodo(element) {
+  // const id = element.attributes.id.value;
+  const todo = LIST[element.id];
+  todo.trash = true;
   //display to the user to notify on ongoing background operation
-  // console.log(LIST), element.id;
+  Swal.fire({
+    title: "Are you sure?",
+    text: "You won't be able to revert this!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "Yes, delete it!",
+  }).then((result) => {
+    if (result.value) {
+      http.delete(`/todo/delete/${todo.docId}`).then((response) => {
+        element.parentNode.parentNode.removeChild(element.parentNode);
+        // show a notification
+      });
+      Swal.fire("Deleted!", "Your file has been deleted.", "success");
+    }
+  });
+  /*// console.log(LIST), element.id;
   const todo = LIST[element.id];
   todo.trash = true;
   http.delete(`/todo/delete/${todo.docId}`).then((response) => {
     element.parentNode.parentNode.removeChild(element.parentNode);
     //show a notification that todo has been deleted
     console.log(response);
+  });*/
+}
+
+async function MakeToDoEdit(element) {
+  // display to user that something is going on
+  const id = element.attributes.id.value;
+  const name = element.parentNode.querySelector(".text").innerText;
+  $(`p#${id}`).replaceWith(
+    `<input type="text" id="ed${id}" class="text" value="${name}" style="margin: 5px auto 5px 55px; height:30px; font:16px;">`
+  );
+
+  $(`#ed${id}`).on("keyup", async (event) => {
+    const newName = $(`#ed${id}`).val();
+    if (event.keyCode == 13) {
+      const newId = element.parentNode.attributes.id.value;
+      const done =
+        element.classList.value == "fa co fa-check-circle" ? true : false;
+
+      await http
+        .patch(`/todo/update/${newId}`, {
+          name: newName,
+          done,
+        })
+        .then((response) => {
+          Swal.fire({
+            position: "top-end",
+            icon: "success",
+            title: "Your TODO has been saved",
+            showConfirmButton: true,
+            timer: 10000,
+          });
+        });
+
+      $(`#ed${id}`).replaceWith(`<p class="text " id="${id}">${newName}</p>`);
+    }
   });
 }
 
@@ -194,7 +289,10 @@ list.addEventListener("click", function (event) {
     completeTodo(element);
   } else if (elementJob == "delete") {
     removeTodo(element);
+  } else if (elementJob == "edit") {
+    MakeToDoEdit(element);
   }
-  //add items to local storage(this code must be added everywhere the LIST array is updated)
-  localStorage.setItem("TODO", JSON.stringify(LIST));
+
+  /* //add items to local storage(this code must be added everywhere the LIST array is updated)
+  localStorage.setItem("TODO", JSON.stringify(LIST));*/
 });

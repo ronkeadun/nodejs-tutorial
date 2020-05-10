@@ -27,6 +27,7 @@ const VALIDATORS = {
         .withMessage("Name is required")
         .isString()
         .withMessage("Name must be a string"),
+      body("done").exists().withMessage("Done must be string"),
     ],
     DeleteTodo: [
       param("id")

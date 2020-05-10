@@ -4,6 +4,10 @@ require("./../config");
 const TaskSchema = new mongoose.Schema(
   {
     name: mongoose.SchemaTypes.String,
+    done: {
+      default: false,
+      type: Boolean,
+    },
   },
   {
     timestamps: true,

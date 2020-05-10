@@ -109,6 +109,17 @@ body {
   color: #af0000;
   cursor: pointer;
 }
+
+.item i.ed {
+  position: absolute;
+  font-size: 25px;
+  right: 43px;
+  top: 10px;
+}
+.item i.ed:hover {
+  color: #06af00;
+  cursor: pointer;
+}
 /* ------------ add item ------------ */
 .add-to-do {
   position: relative;
