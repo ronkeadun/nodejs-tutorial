@@ -80,4 +80,20 @@ router.delete(
       });
   }
 );
+
+router.delete("/delete", (req, res) => {
+  Task.deleteMany({})
+    .then((doc) => {
+      if (!doc) {
+        return res.status(400).send({ message: "Todo  not found" });
+      }
+      return res.status(200).send(doc);
+    })
+    .catch((error) => {
+      return res
+        .status(503)
+        .send({ message: "Service unavailable. Try Later" });
+    });
+});
+
 exports.TodoRouter = router;
