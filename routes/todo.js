@@ -45,6 +45,7 @@ router.patch("/update/:id", ...TODO.UpdateTodo, validateRequest, (req, res) => {
     req.params.id,
     {
       name: res.locals.data.name,
+      done: res.locals.data.done,
     },
     {
       new: true,
