@@ -18,9 +18,9 @@ const Config = Object.freeze({
 });
 
 mongoose
-  .connect(Config.MongoDB.URI, () => {}, {
+  .connect(Config.MongoDB.URI, {
     useNewUrlParser: true,
-    useFindAndModify: true,
+    useFindAndModify: false,
     useUnifiedTopology: true,
   })
   .catch((err) => {

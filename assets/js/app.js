@@ -36,8 +36,9 @@ async function fetchTodos() {
     const response = await http.get("/todo/all");
     return response.data.map((todo, index) => {
       return {
-        id: index,
-        docId: todo._id,
+        // id: index,
+        // docId: todo._id,
+        id: todo._id,
         name: todo.name,
         done: todo.done,
         trash: todo.trash,
@@ -70,7 +71,7 @@ fetchTodos().then((items) => {
   if (items.length) {
     loadList(items);
   }
-  LIST = items;
+  // LIST = items;
 });
 
 //load items to the user's interface
@@ -125,9 +126,9 @@ function addTodo(toDo, id, done, trash) {
   const LINE = done ? LINE_THROUGH : "";
   const item = `<li class="item" id="${id}">
                         <i class="fa ${DONE} co" job="complete" id="${id}"></i>
-                        <p class="text ${LINE}" id="todo${id}">${toDo}</p>
+                        <p class="text ${LINE}" id="toDo${id}">${toDo}</p>
                         <i class="fa fa-trash-o de" job="delete" id="${id}"></i>
-                        <i class="fa fa-edit ed" job ="edit" id="todo${id}"></i>
+                        <i class="fa fa-edit ed" job ="edit" id="toDo${id}"></i>
                     </li>
                 `;
   const position = "beforeend";
@@ -149,13 +150,13 @@ document.addEventListener("keyup", function (event) {
         .then((response) => {
           if (response.status === 200) {
             addTodo(toDo, id, false, false);
-            LIST.push({
+            /*LIST.push({
               name: toDo,
               id: id,
               done: false,
               trash: false,
             });
-            id++;
+            id++;*/
             Swal.fire({
               position: "top-end",
               icon: "success",
@@ -226,7 +227,7 @@ function removeTodo(element) {
     confirmButtonText: "Yes, delete it!",
   }).then((result) => {
     if (result.value) {
-      http.delete(`/todo/delete/${todo.docId}`).then((response) => {
+      http.delete(`/todo/delete/${todo.id}`).then((response) => {
         element.parentNode.parentNode.removeChild(element.parentNode);
         // show a notification
       });
@@ -279,7 +280,7 @@ async function MakeToDoEdit(element) {
 }
 
 //target the items created dynamically
-list.addEventListener("click", function (event) {
+/*list.addEventListener("click", (event) => {
   const element = event.target; //returns the clicked element in the list items
   const elementJob = element.attributes.job.value; //returns complete or delete
   console.log(event.target);
@@ -293,6 +294,26 @@ list.addEventListener("click", function (event) {
     MakeToDoEdit(element);
   }
 
-  /* //add items to local storage(this code must be added everywhere the LIST array is updated)
-  localStorage.setItem("TODO", JSON.stringify(LIST));*/
+  //add items to local storage(this code must be added everywhere the LIST array is updated)
+  // localStorage.setItem("TODO", JSON.stringify(LIST));
+});*/
+
+list.addEventListener("click", (event) => {
+  const element = event.target; //return the clicked element inside the list
+
+  if (element.attributes.job) {
+    const elementJob = element.attributes.job.value; //this returns the custom set attributes in the items field i.e complete or delete and when set up a conditional that if the job is either complete or delete we use either the completeToDo or removeToDo functions respectively.
+
+    if (elementJob == "complete") {
+      console.log(event.target);
+      completeTodo(element);
+    } else if (elementJob == "delete") {
+      console.log(event.target);
+      removeTodo(element);
+    } else if (elementJob == "edit") {
+      console.log(event.target);
+      MakeToDoEdit(element);
+    }
+    // add item to LocalStorage(this code must be added where the list array is updated)
+  }
 });

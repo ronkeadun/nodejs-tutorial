@@ -212,10 +212,13 @@ list.addEventListener("click", (event) => {
     const elementJob = element.attributes.job.value; //this returns the custom set attributes in the items field i.e complete or delete and when set up a conditional that if the job is either complete or delete we use either the completeToDo or removeToDo functions respectively.
 
     if (elementJob == "complete") {
+      console.log(event.target);
       completeToDo(element);
     } else if (elementJob == "delete") {
+      console.log(event.target);
       removeToDo(element);
     } else if (elementJob == "edit") {
+      console.log(event.target);
       MakeToDoEdit(element);
     }
     // add item to LocalStorage(this code must be added where the list array is updated)
