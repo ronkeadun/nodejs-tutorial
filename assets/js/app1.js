@@ -91,7 +91,7 @@ function addToDo(todo, id, done, trash) {
   list.insertAdjacentHTML(position, item);
 }
 
-function addTodoHandler() {
+function addTodoHelper() {
   const toDo = input.value;
 
   // if a todo is added the addtodo function is triggered it will add the todo to the list
@@ -125,12 +125,12 @@ function addTodoHandler() {
 // this is designed to add an event listener which triggers when we add an item to the list using the enter key
 document.addEventListener("keyup", (event) => {
   if (event.keyCode == 13) {
-    addTodoHandler();
+    addTodoHelper();
   }
 });
 
 addButton.addEventListener("click", () => {
-  addTodoHandler();
+  addTodoHelper();
 });
 
 // function designed to check if a particular todo is completed
