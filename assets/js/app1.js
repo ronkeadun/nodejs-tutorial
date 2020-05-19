@@ -3,6 +3,7 @@ const clear = document.querySelector(".clear");
 const list = document.getElementById("list");
 const input = document.getElementById("input");
 const dateElement = document.getElementById("date");
+const addButton = document.querySelector(".fa-plus-circle");
 
 // selecting class names of font-awesome we can toggle with when carrying out actions on the to-do list
 const CHECK = "fa-check-circle";
@@ -90,38 +91,46 @@ function addToDo(todo, id, done, trash) {
   list.insertAdjacentHTML(position, item);
 }
 
+function addTodoHandler() {
+  const toDo = input.value;
+
+  // if a todo is added the addtodo function is triggered it will add the todo to the list
+  if (toDo) {
+    http
+      .post("/todo/create", {
+        name: toDo,
+      })
+      .then((response) => {
+        if (response.status == 200) {
+          addToDo(toDo, response.data._id, false, false);
+
+          Swal.fire({
+            position: "top-end",
+            icon: "success",
+            title: "Your TODO has been saved",
+            showConfirmButton: true,
+            timer: 10000,
+          });
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }
+
+  // when empty
+  input.value = "";
+}
+
 // this is designed to add an event listener which triggers when we add an item to the list using the enter key
 document.addEventListener("keyup", (event) => {
   if (event.keyCode == 13) {
-    const toDo = input.value;
-
-    // if a todo is added the addtodo function is triggered it will add the todo to the list
-    if (toDo) {
-      http
-        .post("/todo/create", {
-          name: toDo,
-        })
-        .then((response) => {
-          if (response.status == 200) {
-            addToDo(toDo, response.data._id, false, false);
-
-            Swal.fire({
-              position: "top-end",
-              icon: "success",
-              title: "Your TODO has been saved",
-              showConfirmButton: true,
-              timer: 10000,
-            });
-          }
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-    }
-
-    // when empty
-    input.value = "";
+    addTodoHandler();
   }
+});
+
+addButton.addEventListener("click", () => {
+  addTodoHandler();
 });
 
 // function designed to check if a particular todo is completed
